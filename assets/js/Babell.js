@@ -1,36 +1,95 @@
-const { TimelineMax, TweenMax } = window
-const heart = document.querySelector('.heart')
-const eye = document.querySelector('.eye')
-const straight = document.querySelector('.eye__piece--straight')
-const curved = document.querySelector('.eye__piece--curved')
-const mouth = document.querySelector('.mouth')
-const cloak = document.querySelector('.cloak')
+let c = init("canvas"),
+  w = (canvas.width = window.innerWidth),
+  h = (canvas.height = window.innerHeight);
+//initiation
 
-const timeline = new TimelineMax({ delay: 1, repeat: -1, repeatDelay: 1 })
+class firefly{
+  constructor(){
+    this.x = Math.random()*w;
+    this.y = Math.random()*h;
+    this.s = Math.random()*2;
+    this.ang = Math.random()*2*Math.PI;
+    this.v = this.s*this.s/4;
+  }
+  move(){
+    this.x += this.v*Math.cos(this.ang);
+    this.y += this.v*Math.sin(this.ang);
+    this.ang += Math.random()*20*Math.PI/180-10*Math.PI/180;
+  }
+  show(){
+    c.beginPath();
+    c.arc(this.x,this.y,this.s,0,2*Math.PI);
+    c.fillStyle="#fddba3";
+    c.fill();
+  }
+}
 
-const beat = delay =>
-  new TimelineMax({ delay })
-    .to(heart, 0.1, { scale: 0.85 })
-    .to(heart, 0.1, { scale: 0.95 })
-    .to(heart, 0.1, { scale: 0.85 })
-    .to(heart, 0.1, { scale: 1 })
+let f = [];
 
-const rotate = () =>
-  new TimelineMax()
-    .to(eye, 0.4, { rotation: 45 })
-    .to(eye, 0.4, { rotation: 90 })
-    .to(eye, 0.4, { rotation: 135 })
-    .to(eye, 0.4, { rotation: 180 })
+function draw() {
+  if(f.length < 100){
+    for(let j = 0; j < 10; j++){
+     f.push(new firefly());
+  }
+     }
+  //animation
+  for(let i = 0; i < f.length; i++){
+    f[i].move();
+    f[i].show();
+    if(f[i].x < 0 || f[i].x > w || f[i].y < 0 || f[i].y > h){
+       f.splice(i,1);
+       }
+  }
+}
 
-timeline
-  .add(TweenMax.from(heart, 0.15, { scale: 0 }))
-  .add(beat(), 1.2)
-  .add(beat(0.25))
-  .add(beat(0), 3.6)
-  .add(TweenMax.from(straight, 0.3, { x: -innerWidth, y: -innerWidth }), 0.9)
-  .add(TweenMax.from(curved, 0.3, { x: innerWidth, y: -innerWidth }), 1.1)
-  .add(rotate(), 2.75)
-  .add(TweenMax.from(mouth, 0.3, { scaleX: 1, x: -innerWidth }), 2.75)
-  .add(TweenMax.to(mouth, 0.25, { scaleX: 1 }, 3.4))
-  .add(TweenMax.to(mouth, 0.25, { height: innerHeight }))
-  .add(TweenMax.to(cloak, 0.5, { y: '-50%' }), 4.8)
+let mouse = {};
+let last_mouse = {};
+
+canvas.addEventListener(
+  "mousemove",
+  function(e) {
+    last_mouse.x = mouse.x;
+    last_mouse.y = mouse.y;
+
+    mouse.x = e.pageX - this.offsetLeft;
+    mouse.y = e.pageY - this.offsetTop;
+  },
+  false
+);
+function init(elemid) {
+  let canvas = document.getElementById(elemid),
+    c = canvas.getContext("2d"),
+    w = (canvas.width = window.innerWidth),
+    h = (canvas.height = window.innerHeight);
+  c.fillStyle = "rgba(30,30,30,1)";
+  c.fillRect(0, 0, w, h);
+  return c;
+}
+
+window.requestAnimFrame = (function() {
+  return (
+    window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame ||
+    window.oRequestAnimationFrame ||
+    window.msRequestAnimationFrame ||
+    function(callback) {
+      window.setTimeout(callback);
+    }
+  );
+});
+
+function loop() {
+  window.requestAnimFrame(loop);
+  c.clearRect(0, 0, w, h);
+  draw();
+}
+
+window.addEventListener("resize", function() {
+  (w = canvas.width = window.innerWidth),
+  (h = canvas.height = window.innerHeight);
+  loop();
+});
+
+loop();
+setInterval(loop, 1000 / 60);
